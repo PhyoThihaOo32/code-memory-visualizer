@@ -591,6 +591,9 @@ class CppInterpreter:
             self.snap(fn['line'], 'return')
             self.call_stack.pop()
             return ret.val
+        # void function (or fell off end) — emit a return so the frame visibly pops
+        last_line = self.snapshots[-1]['line'] if self.snapshots else fn['line']
+        self.snap(last_line, 'return')
         self.call_stack.pop()
         return None
 
@@ -749,6 +752,17 @@ class CppInterpreter:
             elems = [self.eval_expr(e) for e in node['elems']]
             hid = self.new_id()
             self.heap[hid] = {'id':hid,'typeName':'array','isArray':True,'elems':elems,'fields':{}}
+            return '__ref__' + hid
+
+        if t == 'NewArray':
+            etype = node['etype']
+            if node.get('elems') is not None:
+                elems = [self.eval_expr(e) for e in node['elems']]
+            else:
+                size = int(self.eval_expr(node['size'])) if node.get('size') else 0
+                elems = [self._default(etype)] * size
+            hid = self.new_id()
+            self.heap[hid] = {'id': hid, 'typeName': etype + '[]', 'isArray': True, 'elems': elems, 'fields': {}}
             return '__ref__' + hid
 
         if t == 'CtorCall':

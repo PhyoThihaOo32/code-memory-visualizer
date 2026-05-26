@@ -123,7 +123,7 @@ def _trace(frame, event, arg):
         "globals": g_enc,
         "event": ev,
         "highlight": highlight,
-        "stdout": "".join(_stdout_buf)
+        "stdout": sys.stdout.getvalue()   # progressive: only output printed so far
     }
     _snapshots.append(snap)
     _step += 1
@@ -168,10 +168,6 @@ def run_and_trace(code):
         finally:
             sys.settrace(None)
 
-        captured = sys.stdout.getvalue()
-        # Patch stdout into all snapshots
-        for s in _snapshots:
-            s['stdout'] = captured
     finally:
         sys.stdout = old_stdout
 

@@ -100,6 +100,7 @@ export function StackView({ frames, highlight }: Props) {
                       <motion.div
                         key={name}
                         layout
+                        data-var={`${frame.id}-${name}`}
                         initial={false}
                         animate={{
                           background: isHighlighted

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { StackFrame } from '../../types';
 
@@ -16,14 +16,28 @@ interface Props {
 export function PointerArrows({ frames, containerRef }: Props) {
   const [arrows, setArrows] = useState<Arrow[]>([]);
 
+  // Stable key: only re-measure when the set of ref-valued locals actually changes.
+  // Without this, the effect would run on every render and call setArrows → infinite loop.
+  const refKey = useMemo(
+    () =>
+      frames
+        .flatMap((f) =>
+          Object.entries(f.locals)
+            .filter(([, v]) => v.kind === 'ref')
+            .map(([name, v]) => `${f.id}:${name}->${v.kind === 'ref' ? v.id : ''}`)
+        )
+        .join('|'),
+    [frames],
+  );
+
   useEffect(() => {
-    if (!containerRef.current) return;
+    if (!containerRef.current) { setArrows([]); return; }
     const container = containerRef.current;
     const rect = container.getBoundingClientRect();
 
     const found: Arrow[] = [];
 
-    // For each ref value in frames and globals, find the source element and target heap card
+    // For each ref value in frames, find the source element and target heap card
     const collectRefs = (frameId: string, varName: string, refId: string) => {
       const srcEl = container.querySelector(`[data-var="${frameId}-${varName}"]`);
       const tgtEl = container.querySelector(`[data-heap="${refId}"]`);
@@ -48,7 +62,8 @@ export function PointerArrows({ frames, containerRef }: Props) {
     }
 
     setArrows(found);
-  });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refKey]);
 
   if (arrows.length === 0) return null;
 

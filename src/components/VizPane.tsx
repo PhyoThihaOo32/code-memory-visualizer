@@ -5,6 +5,7 @@ import { StackView } from './viz/StackView';
 import { HeapView } from './viz/HeapView';
 import { GlobalsView } from './viz/GlobalsView';
 import { LinkedListView, detectLinkedChains } from './viz/LinkedListView';
+import { PointerArrows } from './viz/PointerArrows';
 
 const EVENT_COLORS: Record<string, string> = {
   call: '#00E5FF',
@@ -154,7 +155,8 @@ export function VizPane() {
 
       {/* Main content */}
       {snap && (
-        <div style={{ padding: 20, minHeight: '100%', display: 'flex', flexDirection: 'column', gap: 20 }}>
+        <div style={{ padding: 20, minHeight: '100%', display: 'flex', flexDirection: 'column', gap: 20, position: 'relative' }}>
+          <PointerArrows frames={snap.stack} containerRef={containerRef} />
 
           {/* Event badge + step info */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -187,12 +189,9 @@ export function VizPane() {
             </span>
           </div>
 
-          {/* Globals region */}
+          {/* Globals region — GlobalsView has its own internal card header */}
           {hasGlobals && (
-            <div>
-              <div style={REGION_LABEL}>Globals</div>
-              <GlobalsView globals={snap.globals} highlight={snap.highlight} />
-            </div>
+            <GlobalsView globals={snap.globals} highlight={snap.highlight} />
           )}
 
           {/* ── Linked list chains — full width ── */}

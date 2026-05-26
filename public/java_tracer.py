@@ -367,7 +367,7 @@ class Parser:
         t = self.peek()
         if t['k']=='NUM':
             self.advance()
-            v = float(t['v']) if '.' in t['v'] or ('e' in t['v'].lower() and 'E' in t['v']) else int(t['v'].rstrip('lLfFdD'))
+            v = float(t['v'].rstrip('fFdD')) if ('.' in t['v'] or 'e' in t['v'].lower()) else int(t['v'].rstrip('lLfFdD'))
             return {'t':'Num','v':v,'line':t['l']}
         if t['k']=='STR':  self.advance(); return {'t':'Str','v':t['v'],'line':t['l']}
         if t['k']=='CHAR': self.advance(); return {'t':'Num','v':ord(t['v']),'line':t['l']}
@@ -552,12 +552,18 @@ class JavaInterpreter:
         self.this_stack.append(this_ref)
         self.snap(meth['line'], 'call')
         ret = None
+        returned_explicitly = False
         try:
             self.exec_block(meth['body'])
         except ReturnException as r:
             ret = r.val
             frame['return_val'] = ret
             self.snap(meth['line'], 'return')
+            returned_explicitly = True
+        if not returned_explicitly:
+            # void method fell off the end — emit a return snapshot so the frame visibly pops
+            last_line = self.snapshots[-1]['line'] if self.snapshots else meth['line']
+            self.snap(last_line, 'return')
         self.call_stack.pop()
         self.this_stack.pop()
         return ret
@@ -594,7 +600,8 @@ class JavaInterpreter:
         if t == 'If':
             self.snap(stmt['line'])
             if self.eval_expr(stmt['cond']): self.exec_stmt(stmt['then'])
-            elif stmt['alt']: self.exec_stmt(stmt['alt']); return
+            elif stmt['alt']: self.exec_stmt(stmt['alt'])
+            return
         if t == 'While':
             while True:
                 self.snap(stmt['line'])

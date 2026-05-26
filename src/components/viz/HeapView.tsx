@@ -45,6 +45,7 @@ function HeapCard({ obj, highlight }: { obj: HeapObject; highlight?: { type: 're
   return (
     <motion.div
       layout
+      data-heap={obj.id}
       initial={{ opacity: 0, scale: 0.94, y: 8 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.92, y: -4 }}
