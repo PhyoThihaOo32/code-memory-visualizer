@@ -87,6 +87,56 @@ head.next.next.next = Node(4)
 new_head = reverse(head)
 `,
   },
+  {
+    id: 'py_vector_ops', lang: 'python',
+    name: 'Vector Insert / Delete',
+    hint: 'Insert shifts elements right; delete shifts left — watch the array cells animate',
+    code: `# Insert shifts elements right; removal shifts elements left
+# Watch the array cells on the heap update live at each step
+
+data = [10, 20, 30, 40, 50]
+
+# INSERT 99 at index 2 — elements 30,40,50 slide right
+data.insert(2, 99)
+
+# REMOVE element at index 2 — slides back
+data.pop(2)
+
+# INSERT at head — every element shifts right (most expensive!)
+data.insert(0, 5)
+
+# REMOVE from head — every element shifts left
+data.pop(0)
+`,
+  },
+  {
+    id: 'py_ll_insert_delete', lang: 'python',
+    name: 'Linked List Insert / Delete',
+    hint: 'Watch exactly two pointer fields rewire for insert — zero shifting needed',
+    code: `# Watch pointer arrows rewire — one field at a time
+# Insert/delete only needs O(1) pointer updates, no shifting
+
+class Node:
+    def __init__(self, val):
+        self.val = val
+        self.next = None
+
+# Build: 1 -> 2 -> 3 -> 4
+head = Node(1)
+head.next = Node(2)
+head.next.next = Node(3)
+head.next.next.next = Node(4)
+
+# INSERT 99 after node-2 — only 2 pointer writes
+prev = head.next          # prev points at node-2
+ins = Node(99)
+ins.next = prev.next      # step 1: ins -> 3 -> 4
+prev.next = ins           # step 2: 1 -> 2 -> 99 -> 3 -> 4
+
+# DELETE ins (node-99) — only 1 pointer write
+prev.next = ins.next      # 1 -> 2 -> 3 -> 4
+`,
+  },
 ];
 
 // ─── C++ ───────────────────────────────────────────────────────────────────
@@ -244,6 +294,67 @@ int main() {
 }
 `,
   },
+  {
+    id: 'cpp_vector_ops', lang: 'cpp',
+    name: 'Vector Insert / Delete',
+    hint: 'Insert shifts elements right; delete shifts left — watch cells animate in the array band',
+    code: `// Insert shifts elements right; removal shifts elements left
+// Extra slots pre-allocated so insertion doesn't overflow
+#include <iostream>
+using namespace std;
+
+int main() {
+    int arr[] = {10, 20, 30, 40, 50, 0, 0, 0};
+    int size = 5;
+
+    // INSERT 99 at index 2 — shift elements right
+    int idx = 2;
+    for (int i = size; i > idx; i--) {
+        arr[i] = arr[i - 1];
+    }
+    arr[idx] = 99;
+    size++;
+
+    // REMOVE element at index 2 — shift elements left
+    for (int i = idx; i < size - 1; i++) {
+        arr[i] = arr[i + 1];
+    }
+    size--;
+
+    return 0;
+}
+`,
+  },
+  {
+    id: 'cpp_ll_insert_delete', lang: 'cpp',
+    name: 'Linked List Insert / Delete',
+    hint: 'Watch exactly two pointer fields rewire for insert — no shifting, just pointer updates',
+    code: `// Insert/delete only rewires pointers — O(1) work, no shifting
+#include <iostream>
+using namespace std;
+
+struct Node { int val; Node* next; };
+
+int main() {
+    // Build 1 -> 2 -> 3 -> 4
+    Node* head = new Node{1, nullptr};
+    head->next = new Node{2, nullptr};
+    head->next->next = new Node{3, nullptr};
+    head->next->next->next = new Node{4, nullptr};
+
+    // INSERT 99 after node-2 — only 2 pointer writes
+    Node* prev = head->next;        // prev -> node-2
+    Node* ins = new Node{99, nullptr};
+    ins->next = prev->next;         // step 1: ins -> 3 -> 4
+    prev->next = ins;               // step 2: 1 -> 2 -> 99 -> 3 -> 4
+
+    // DELETE ins (node-99) — only 1 pointer write
+    prev->next = ins->next;         // 1 -> 2 -> 3 -> 4
+
+    return 0;
+}
+`,
+  },
 ];
 
 // ─── Java ──────────────────────────────────────────────────────────────────
@@ -349,6 +460,65 @@ public class Main {
         head.next.next = new Node(3);
         head.next.next.next = new Node(4);
         head = reverse(head);
+    }
+}
+`,
+  },
+  {
+    id: 'java_vector_ops', lang: 'java',
+    name: 'Vector Insert / Delete',
+    hint: 'Insert shifts elements right; delete shifts left — watch cells animate in the array band',
+    code: `// Insert shifts elements right; removal shifts elements left
+// Extra slots pre-allocated so insertion doesn't overflow
+public class Main {
+    public static void main(String[] args) {
+        int[] arr = {10, 20, 30, 40, 50, 0, 0, 0};
+        int size = 5;
+
+        // INSERT 99 at index 2 — shift elements right
+        int idx = 2;
+        for (int i = size; i > idx; i--) {
+            arr[i] = arr[i - 1];
+        }
+        arr[idx] = 99;
+        size++;
+
+        // REMOVE element at index 2 — shift elements left
+        for (int i = idx; i < size - 1; i++) {
+            arr[i] = arr[i + 1];
+        }
+        size--;
+    }
+}
+`,
+  },
+  {
+    id: 'java_ll_insert_delete', lang: 'java',
+    name: 'Linked List Insert / Delete',
+    hint: 'Watch exactly two pointer fields rewire for insert — no shifting, just pointer updates',
+    code: `// Insert/delete only rewires pointers — O(1) work, no shifting
+public class Main {
+    static class Node {
+        int val;
+        Node next;
+        Node(int v) { this.val = v; this.next = null; }
+    }
+
+    public static void main(String[] args) {
+        // Build 1 -> 2 -> 3 -> 4
+        Node head = new Node(1);
+        head.next = new Node(2);
+        head.next.next = new Node(3);
+        head.next.next.next = new Node(4);
+
+        // INSERT 99 after node-2 — only 2 pointer writes
+        Node prev = head.next;       // prev points to node-2
+        Node ins = new Node(99);
+        ins.next = prev.next;        // step 1: ins -> 3 -> 4
+        prev.next = ins;             // step 2: 1 -> 2 -> 99 -> 3 -> 4
+
+        // DELETE ins (node-99) — only 1 pointer write
+        prev.next = ins.next;        // 1 -> 2 -> 3 -> 4
     }
 }
 `,

@@ -25,7 +25,8 @@ def _lex(src):
         if c == '\n': line += 1; i += 1; continue
         if c in ' \t\r': i += 1; continue
         if c == '/' and i+1 < n and src[i+1] == '/':
-            while i < n and src[i] != '\n': i += 1; continue
+            while i < n and src[i] != '\n': i += 1
+            continue  # ← must be outside the inner while to continue the OUTER loop
         if c == '/' and i+1 < n and src[i+1] == '*':
             i += 2
             while i < n-1:
@@ -34,7 +35,8 @@ def _lex(src):
                 i += 1
             continue
         if c == '@':  # annotation - skip line
-            while i < n and src[i] != '\n': i += 1; continue
+            while i < n and src[i] != '\n': i += 1
+            continue  # same fix — continue the outer loop
         if c == '"':
             i += 1; s = []
             while i < n and src[i] != '"':

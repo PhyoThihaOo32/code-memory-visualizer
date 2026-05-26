@@ -5,6 +5,7 @@ import { StackView } from './viz/StackView';
 import { HeapView } from './viz/HeapView';
 import { GlobalsView } from './viz/GlobalsView';
 import { LinkedListView, detectLinkedChains } from './viz/LinkedListView';
+import { VectorView, detectVectors } from './viz/VectorView';
 import { PointerArrows } from './viz/PointerArrows';
 
 const EVENT_COLORS: Record<string, string> = {
@@ -46,8 +47,21 @@ export function VizPane() {
     [linkedChains],
   );
   const hasLinkedChains = linkedChains.length > 0;
+
+  // Detect arrays/vectors so we can render them with VectorView
+  const vectorIds = useMemo(
+    () => (snap ? new Set(detectVectors(snap.heap)) : new Set<string>()),
+    [snap],
+  );
+  const hasVectors = vectorIds.size > 0;
+
+  // Remaining heap: not a chain node and not a vector
+  const specialIds = useMemo(
+    () => new Set([...chainedIds, ...vectorIds]),
+    [chainedIds, vectorIds],
+  );
   const hasRemainingHeap =
-    hasHeap && Object.keys(snap!.heap).some((id) => !chainedIds.has(id));
+    hasHeap && Object.keys(snap!.heap).some((id) => !specialIds.has(id));
 
   const eventColor = snap ? EVENT_COLORS[snap.event] ?? '#86868B' : '#86868B';
 
@@ -194,6 +208,26 @@ export function VizPane() {
             <GlobalsView globals={snap.globals} highlight={snap.highlight} />
           )}
 
+          {/* ── Vector / array band — full width ── */}
+          {hasVectors && (
+            <div>
+              <div style={REGION_LABEL}>Array</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {[...vectorIds].map((id) => {
+                  const obj = snap.heap[id];
+                  if (!obj || obj.kind !== 'list') return null;
+                  return (
+                    <VectorView
+                      key={id}
+                      arrayObj={obj}
+                      highlight={snap.highlight}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* ── Linked list chains — full width ── */}
           {hasLinkedChains && (
             <div>
@@ -223,14 +257,14 @@ export function VizPane() {
               }
             </div>
 
-            {/* Non-chain heap objects */}
+            {/* Non-chain, non-vector heap objects */}
             {hasRemainingHeap && (
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={REGION_LABEL}>Heap</div>
                 <HeapView
                   heap={snap.heap}
                   highlight={snap.highlight}
-                  excludeIds={chainedIds}
+                  excludeIds={specialIds}
                 />
               </div>
             )}
